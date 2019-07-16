@@ -1,2 +1,58 @@
-version: '3'
+version: '3.6'
+services:
+  fluentd:
+    image: fluentd
+    build:
+      context: ./fluentd
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+    ports:
+      - 24224:24224
+      - 24224:24224/udp
+    networks:
+      - logging
+  elasticsearch:
+    image: elasticsearch:6.8.1
+    ports:
+      - 9200:9200
+    networks:
+      - logging
+  kibana:
+    image: kibana:6.8.1
+    ports:
+      - 5601:5601
+    networks:
+      - logging
+  logger3:
+    image: spring-boot-example-log-app/logger3:latest
+    restart: always
+    ports:
+      - 8093:8093
+    depends_on:
+      - fluentd 
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: docker.logger3
+    networks:
+      - logging      
+  logger5:
+    image: spring-boot-example-log-app/logger5:latest
+    restart: always
+    ports:
+      - 8095:8095
+    depends_on:
+      - fluentd 
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: docker.logger5
+    networks:
+      - logging  
 
+networks:
+  logging:
+    driver: bridge
+      
